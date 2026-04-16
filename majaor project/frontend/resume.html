@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Career Analyzer - Analyze Resume</title>
+    <meta name="description" content="Upload your resume and job description to get instant ATS score and skill gap analysis.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- Mammoth.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <style>
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+        :root {
+            --bg:        #080c14;
+            --bg2:       #0d1220;
+            --card-bg:   #111827;
+            --card-bg2:  #161f30;
+            --border:    rgba(255,255,255,0.07);
+            --border2:   rgba(255,255,255,0.12);
+            --text:      #f1f5f9;
+            --muted:     #94a3b8;
+            --primary:   #6c63ff;
+            --primary2:  #8b5cf6;
+            --accent:    #3b82f6;
+            --success:   #10b981;
+            --warning:   #f59e0b;
+            --danger:    #ef4444;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed; inset: 0; z-index: 0;
+            background:
+                radial-gradient(ellipse 60% 40% at 15% 25%, rgba(108,99,255,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 40% at 85% 75%, rgba(59,130,246,0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        /* ── NAV ── */
+        nav {
+            position: sticky; top: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 3rem; height: 64px;
+            background: rgba(8,12,20,0.9);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-logo {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 1.2rem; font-weight: 700;
+            text-decoration: none; color: var(--text);
+        }
+        .nav-logo .bolt { color: #f97316; font-size: 1.3rem; }
+        .nav-logo .ai-txt { color: var(--accent); }
+        .nav-links { display: flex; align-items: center; gap: 0.2rem; list-style: none; }
+        .nav-links a {
+            padding: 0.45rem 1rem; border-radius: 0.5rem;
+            color: var(--muted); text-decoration: none;
+            font-size: 0.9rem; font-weight: 500; transition: color 0.2s;
+        }
+        .nav-links a.active {
+            color: var(--text);
+            background: rgba(255,255,255,0.06);
+            font-weight: 600;
+        }
+        .nav-links a:hover { color: var(--text); }
+        .btn-nav {
+            background: linear-gradient(135deg, var(--primary), var(--primary2));
+            color: white; border: none; padding: 0.55rem 1.3rem;
+            border-radius: 0.5rem; font-weight: 600; font-size: 0.9rem;
+            cursor: pointer; text-decoration: none;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        .btn-nav:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        /* ── PAGE WRAPPER ── */
+        .page {
+            position: relative; z-index: 1;
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 3.5rem 1.5rem 6rem;
+        }
+
+        /* ── HERO HEADER ── */
+        .page-badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            background: rgba(108,99,255,0.15);
+            border: 1px solid rgba(108,99,255,0.3);
+            color: #a78bfa;
+            padding: 0.35rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.75rem; font-weight: 700;
+            letter-spacing: 0.07em; text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+        h1.page-title {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 900;
+            margin-bottom: 0.75rem;
+            line-height: 1.15;
+        }
+        .page-sub {
+            color: var(--muted); font-size: 1rem; line-height: 1.7;
+            margin-bottom: 2.5rem;
+        }
+
+        /* ── MAIN CARD ── */
+        .main-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border2);
+            border-radius: 1.25rem;
+            overflow: hidden;
+        }
+        .card-section {
+            padding: 1.8rem 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .card-section:last-of-type { border-bottom: none; }
+
+        /* ── Section header row ── */
+        .sec-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 1.2rem;
+        }
+        .sec-title {
+            font-size: 0.95rem; font-weight: 700;
+            display: flex; align-items: center; gap: 0.6rem;
+        }
+        .badge-required {
+            font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.6rem;
+            border-radius: 0.3rem;
+            background: rgba(16,185,129,0.15); color: var(--success);
+            border: 1px solid rgba(16,185,129,0.25);
+        }
+        .badge-optional {
+            font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.6rem;
+            border-radius: 0.3rem;
+            background: rgba(108,99,255,0.15); color: #a78bfa;
+            border: 1px solid rgba(108,99,255,0.25);
+        }
+
+        /* ── Upload JD File button ── */
+        .btn-upload-jd {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border2);
+            color: var(--muted); font-size: 0.8rem; font-weight: 600;
+            padding: 0.4rem 0.9rem; border-radius: 0.5rem;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-upload-jd:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+        .btn-upload-jd input[type="file"] { display: none; }
+
+        /* ── Resume Drop Zone ── */
+        .drop-zone {
+            background: var(--card-bg2);
+            border: 2px dashed rgba(255,255,255,0.12);
+            border-radius: 1rem;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s, background 0.3s;
+            position: relative;
+        }
+        .drop-zone.drag-over {
+            border-color: var(--primary);
+            background: rgba(108,99,255,0.06);
+        }
+        .drop-zone input[type="file"] {
+            position: absolute; inset: 0;
+            opacity: 0; cursor: pointer; width: 100%; height: 100%;
+        }
+        .drop-icon {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        .drop-zone h3 {
+            font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem;
+        }
+        .drop-zone p {
+            color: var(--muted); font-size: 0.88rem; margin-bottom: 1rem;
+        }
+        .format-badges { display: flex; justify-content: center; gap: 0.5rem; }
+        .fmt-badge {
+            padding: 0.25rem 0.65rem;
+            border-radius: 0.35rem;
+            border: 1px solid var(--border2);
+            background: rgba(255,255,255,0.05);
+            color: var(--muted); font-size: 0.75rem; font-weight: 600;
+        }
+
+        /* File chip after selection */
+        .file-chip {
+            display: none;
+            align-items: center; gap: 0.5rem;
+            background: rgba(16,185,129,0.1);
+            border: 1px solid rgba(16,185,129,0.25);
+            color: var(--success);
+            padding: 0.5rem 1rem; border-radius: 0.5rem;
+            font-size: 0.85rem; font-weight: 600;
+            margin-top: 1rem;
+        }
+        .file-chip.show { display: inline-flex; }
+        .file-chip .remove-btn {
+            margin-left: auto; cursor: pointer;
+            color: var(--muted); background: none; border: none;
+            font-size: 0.8rem; padding: 0; transition: color 0.2s;
+        }
+        .file-chip .remove-btn:hover { color: var(--danger); }
+
+        /* Parsing label */
+        .parsing-lbl {
+            display: none; align-items: center; gap: 0.4rem;
+            color: var(--warning); font-size: 0.8rem; margin-top: 0.6rem;
+        }
+        .parsing-lbl.show { display: flex; }
+
+        /* ── JD Textarea ── */
+        .jd-textarea {
+            width: 100%; min-height: 130px;
+            background: var(--card-bg2);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1rem 1.1rem;
+            color: var(--text);
+            font-family: inherit; font-size: 0.9rem; line-height: 1.6;
+            resize: vertical; transition: border-color 0.3s;
+        }
+        .jd-textarea:focus { outline: none; border-color: var(--primary); }
+        .jd-textarea::placeholder { color: #4a5568; }
+
+        /* JD file chip */
+        .jd-file-chip {
+            display: none; align-items: center; gap: 0.4rem;
+            background: rgba(108,99,255,0.1); border: 1px solid rgba(108,99,255,0.25);
+            color: #a78bfa; padding: 0.35rem 0.75rem;
+            border-radius: 0.4rem; font-size: 0.78rem; font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        .jd-file-chip.show { display: inline-flex; }
+
+        /* ── Action Row ── */
+        .action-row {
+            padding: 1.5rem 2rem;
+            display: flex; gap: 1rem; flex-wrap: wrap;
+        }
+        .btn-analyze {
+            flex: 1;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary2));
+            color: white; border: none;
+            padding: 0.9rem 2rem; border-radius: 0.65rem;
+            font-weight: 700; font-size: 1rem; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px rgba(108,99,255,0.3);
+        }
+        .btn-analyze:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(108,99,255,0.45); }
+        .btn-reset {
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border2);
+            color: var(--muted); padding: 0.9rem 1.5rem;
+            border-radius: 0.65rem; font-weight: 600; font-size: 0.9rem;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-reset:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+        /* ── RESULTS CARD ── */
+        #resultsCard {
+            display: none;
+            background: var(--card-bg);
+            border: 1px solid var(--border2);
+            border-radius: 1.25rem;
+            overflow: hidden;
+            margin-top: 1.5rem;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        .results-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .results-header h2 { font-size: 1.1rem; font-weight: 700; }
+
+        /* Ring score */
+        .score-wrap {
+            display: flex; align-items: center; gap: 2rem;
+            padding: 2rem;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+        .ring-container { position: relative; width: 130px; height: 130px; flex-shrink: 0; }
+        .ring-svg { transform: rotate(-90deg); }
+        .ring-bg { fill: none; stroke: rgba(255,255,255,0.07); stroke-width: 12; }
+        .ring-fg {
+            fill: none; stroke-width: 12; stroke-linecap: round;
+            stroke-dasharray: 345; stroke-dashoffset: 345;
+            transition: stroke-dashoffset 1.5s ease, stroke 0.4s;
+        }
+        .ring-label {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .ring-label .num { font-size: 1.7rem; font-weight: 800; }
+        .ring-label .sub { font-size: 0.6rem; color: var(--muted); }
+        .score-info { flex: 1; }
+        .score-info h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem; }
+        .score-info p { color: var(--muted); font-size: 0.88rem; line-height: 1.6; }
+
+        /* Skill sections */
+        .skills-section { padding: 1.5rem 2rem; border-bottom: 1px solid var(--border); }
+        .skills-section:last-of-type { border-bottom: none; }
+        .skills-sec-header {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem;
+        }
+        .skill-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .skill-tag {
+            padding: 0.35rem 0.85rem; border-radius: 2rem;
+            font-size: 0.8rem; font-weight: 600;
+        }
+        .tag-matched { background: rgba(16,185,129,0.1); color: var(--success); border: 1px solid rgba(16,185,129,0.25); }
+        .tag-missing  { background: rgba(239,68,68,0.1);  color: var(--danger);  border: 1px solid rgba(239,68,68,0.25); }
+        .tag-bonus    { background: rgba(245,158,11,0.1); color: var(--warning); border: 1px solid rgba(245,158,11,0.25); }
+        .empty-msg    { color: var(--muted); font-size: 0.85rem; }
+
+        /* Loading overlay on card */
+        #loadingCard {
+            display: none;
+            background: var(--card-bg);
+            border: 1px solid var(--border2);
+            border-radius: 1.25rem;
+            padding: 3rem;
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--primary);
+        }
+        #loadingCard p { color: var(--muted); margin-top: 0.75rem; }
+
+        /* Animations */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+    <a href="index.html" class="nav-logo">
+        <span class="bolt"><i class="fa-solid fa-bolt"></i></span>
+        <span class="ai-txt">AI</span>Career
+    </a>
+    <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="resume.html" class="active">Analyze</a></li>
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="career.html">Career Path</a></li>
+        <li><a href="courses.html">Courses</a></li>
+    </ul>
+    <a href="resume.html" class="btn-nav">Get Started</a>
+</nav>
+
+<!-- PAGE -->
+<div class="page">
+    <!-- Hero Header -->
+    <div style="text-align:center; margin-bottom:2.5rem;">
+        <div class="page-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> New Analysis</div>
+        <h1 class="page-title">Upload Your Resume</h1>
+        <p class="page-sub">Provide your resume and an optional job description to get started.</p>
+    </div>
+
+    <!-- Main Card -->
+    <div class="main-card">
+
+        <!-- ── Resume Section ── -->
+        <div class="card-section">
+            <div class="sec-header">
+                <div class="sec-title">
+                    Your Resume <span class="badge-required">Required</span>
+                </div>
+            </div>
+
+            <div class="drop-zone" id="resumeDropZone">
+                <input type="file" id="resumeFileInput" accept=".pdf,.doc,.docx,.txt">
+                <span class="drop-icon">📤</span>
+                <h3>Drag &amp; drop your resume</h3>
+                <p>or click to browse files</p>
+                <div class="format-badges">
+                    <span class="fmt-badge">PDF</span>
+                    <span class="fmt-badge">DOCX</span>
+                    <span class="fmt-badge">TXT</span>
+                </div>
+            </div>
+
+            <div class="file-chip" id="resumeChip">
+                <i class="fa-solid fa-file-lines"></i>
+                <span id="resumeChipName"></span>
+                <button class="remove-btn" onclick="clearResume()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="parsing-lbl" id="resumeParsingLbl">
+                <i class="fa-solid fa-spinner fa-spin"></i> Extracting text…
+            </div>
+
+            <!-- Hidden textarea to hold extracted text -->
+            <textarea id="resumeText" style="display:none;"></textarea>
+        </div>
+
+        <!-- ── Job Description Section ── -->
+        <div class="card-section">
+            <div class="sec-header">
+                <div class="sec-title">
+                    Target Job Description <span class="badge-optional">Optional</span>
+                </div>
+                <label class="btn-upload-jd" title="Upload JD file">
+                    <i class="fa-solid fa-paperclip"></i> Upload JD File
+                    <input type="file" id="jdFileInput" accept=".pdf,.doc,.docx,.txt">
+                </label>
+            </div>
+
+            <div class="jd-file-chip" id="jdChip">
+                <i class="fa-solid fa-file-lines"></i>
+                <span id="jdChipName"></span>
+                <button style="background:none;border:none;color:var(--muted);cursor:pointer;margin-left:0.3rem;" onclick="clearJD()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="parsing-lbl" id="jdParsingLbl" style="margin-bottom:0.6rem;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Extracting text…
+            </div>
+
+            <textarea id="jdText" class="jd-textarea"
+                placeholder="Paste the job description here to see your ATS match score..."></textarea>
+        </div>
+
+        <!-- ── Action Row ── -->
+        <div class="action-row">
+            <button class="btn-analyze" id="analyzeBtn" onclick="runAnalysis()">
+                <i class="fa-solid fa-magnifying-glass-chart"></i> Analyze Resume
+            </button>
+            <button class="btn-reset" onclick="resetAll()">
+                <i class="fa-solid fa-rotate-left"></i> Reset
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loadingCard">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size:2.5rem;"></i>
+        <p>Comparing your profile against the job description…</p>
+    </div>
+
+    <!-- Results -->
+    <div id="resultsCard">
+        <div class="results-header">
+            <h2><i class="fa-solid fa-chart-bar" style="color:var(--primary);margin-right:0.5rem;"></i> Analysis Results</h2>
+            <button class="btn-reset" onclick="resetAll()" style="padding:0.5rem 1rem;font-size:0.82rem;">
+                <i class="fa-solid fa-rotate-left"></i> New Analysis
+            </button>
+        </div>
+
+        <!-- Score -->
+        <div class="score-wrap">
+            <div class="ring-container">
+                <svg class="ring-svg" viewBox="0 0 130 130" width="130" height="130">
+                    <circle class="ring-bg" cx="65" cy="65" r="55"/>
+                    <circle class="ring-fg" id="scoreRing" cx="65" cy="65" r="55"/>
+                </svg>
+                <div class="ring-label">
+                    <div class="num" id="scoreNum">0%</div>
+                    <div class="sub">ATS Score</div>
+                </div>
+            </div>
+            <div class="score-info">
+                <h3 id="scoreFeedbackTitle">Analyzing…</h3>
+                <p id="scoreFeedbackMsg"></p>
+            </div>
+        </div>
+
+        <!-- Matched -->
+        <div class="skills-section">
+            <div class="skills-sec-header">
+                <i class="fa-solid fa-circle-check" style="color:var(--success)"></i>
+                Skills Matched from Job Description
+            </div>
+            <div class="skill-tags" id="matchedTags"></div>
+        </div>
+
+        <!-- Missing -->
+        <div class="skills-section">
+            <div class="skills-sec-header">
+                <i class="fa-solid fa-circle-exclamation" style="color:var(--danger)"></i>
+                Missing / Gap Skills
+            </div>
+            <div class="skill-tags" id="missingTags"></div>
+            <p class="empty-msg" id="missingMsg" style="margin-top:0.6rem;"></p>
+        </div>
+
+        <!-- Bonus -->
+        <div class="skills-section" id="bonusSection" style="display:none;">
+            <div class="skills-sec-header">
+                <i class="fa-solid fa-star" style="color:var(--warning)"></i>
+                Bonus Skills (your extras, not in JD)
+            </div>
+            <div class="skill-tags" id="bonusTags"></div>
+        </div>
+    </div>
+</div><!-- /page -->
+
+<script>
+// ── pdf.js worker ────────────────────────────────────────────────────────────
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ── File extraction helpers ──────────────────────────────────────────────────
+async function extractPDF(file) {
+    const ab = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+    let txt = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const c = await page.getTextContent();
+        txt += c.items.map(x => x.str).join(' ') + '\n';
+    }
+    return txt;
+}
+async function extractDOCX(file) {
+    const ab = await file.arrayBuffer();
+    const r = await mammoth.extractRawText({ arrayBuffer: ab });
+    return r.value;
+}
+async function extractText(file) {
+    const n = file.name.toLowerCase();
+    if (n.endsWith('.pdf'))  return extractPDF(file);
+    if (n.endsWith('.docx') || n.endsWith('.doc')) return extractDOCX(file);
+    // txt / fallback
+    return new Promise(res => {
+        const fr = new FileReader();
+        fr.onload = e => res(e.target.result);
+        fr.readAsText(file);
+    });
+}
+
+// ── Resume upload ────────────────────────────────────────────────────────────
+const resumeInput = document.getElementById('resumeFileInput');
+const resumeDropZone = document.getElementById('resumeDropZone');
+const resumeChip = document.getElementById('resumeChip');
+const resumeChipName = document.getElementById('resumeChipName');
+const resumeParsingLbl = document.getElementById('resumeParsingLbl');
+const resumeTextarea = document.getElementById('resumeText');
+
+async function handleResumeFile(file) {
+    resumeChipName.textContent = file.name;
+    resumeChip.classList.add('show');
+    resumeParsingLbl.classList.add('show');
+    resumeTextarea.value = '';
+    try {
+        resumeTextarea.value = (await extractText(file)).trim();
+    } catch(e) {
+        alert('Could not extract text. Try pasting your content manually.');
+    }
+    resumeParsingLbl.classList.remove('show');
+}
+
+resumeInput.addEventListener('change', e => { if (e.target.files[0]) handleResumeFile(e.target.files[0]); });
+
+['dragover','dragleave','drop'].forEach(evt => resumeDropZone.addEventListener(evt, e => {
+    e.preventDefault();
+    if (evt === 'dragover') { resumeDropZone.classList.add('drag-over'); }
+    else if (evt === 'dragleave') { resumeDropZone.classList.remove('drag-over'); }
+    else {
+        resumeDropZone.classList.remove('drag-over');
+        const f = e.dataTransfer.files[0];
+        if (f) handleResumeFile(f);
+    }
+}));
+
+function clearResume() {
+    resumeChip.classList.remove('show');
+    resumeTextarea.value = '';
+    resumeInput.value = '';
+}
+
+// ── JD upload ────────────────────────────────────────────────────────────────
+const jdInput    = document.getElementById('jdFileInput');
+const jdChip     = document.getElementById('jdChip');
+const jdChipName = document.getElementById('jdChipName');
+const jdParsingLbl = document.getElementById('jdParsingLbl');
+const jdTextarea = document.getElementById('jdText');
+
+async function handleJDFile(file) {
+    jdChipName.textContent = file.name;
+    jdChip.classList.add('show');
+    jdParsingLbl.classList.add('show');
+    jdTextarea.value = '';
+    try {
+        jdTextarea.value = (await extractText(file)).trim();
+    } catch(e) {
+        alert('Could not extract text. Try pasting the JD manually.');
+    }
+    jdParsingLbl.classList.remove('show');
+}
+jdInput.addEventListener('change', e => { if (e.target.files[0]) handleJDFile(e.target.files[0]); });
+
+function clearJD() {
+    jdChip.classList.remove('show');
+    jdTextarea.value = '';
+    jdInput.value = '';
+}
+
+// ── Skill Bank ───────────────────────────────────────────────────────────────
+const SKILL_BANK = [
+    'javascript','typescript','python','java','c++','c#','c','go','rust','ruby','php','swift','kotlin','scala','r','matlab',
+    'html','css','react','vue','angular','svelte','next.js','nuxt','jquery','tailwind','sass','bootstrap',
+    'node.js','express','django','flask','fastapi','spring','laravel','rails','graphql','rest api','rest','grpc',
+    'mysql','postgresql','mongodb','firebase','redis','sqlite','dynamodb','cassandra','elasticsearch','sql','nosql',
+    'aws','azure','gcp','docker','kubernetes','ci/cd','terraform','ansible','github actions','jenkins','linux','bash',
+    'machine learning','deep learning','tensorflow','pytorch','pandas','numpy','scikit-learn','nlp','data analysis','power bi','tableau',
+    'git','agile','scrum','jira','figma','microservices','kafka','socket.io','webpack','vite','testing','jest','cypress',
+];
+
+function norm(t) { return t.toLowerCase().replace(/[^a-z0-9#\+\.\s\/]/g, ' '); }
+function extractSkills(text) {
+    const n = norm(text);
+    return SKILL_BANK.filter(sk => new RegExp(`(?<![a-z0-9])${sk.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}(?![a-z0-9])`, 'i').test(n));
+}
+
+function renderTags(id, skills, cls) {
+    const el = document.getElementById(id);
+    el.innerHTML = '';
+    if (!skills.length) { el.innerHTML = '<span class="empty-msg">None detected</span>'; return; }
+    skills.forEach(sk => {
+        const s = document.createElement('span');
+        s.className = `skill-tag ${cls}`; s.textContent = sk;
+        el.appendChild(s);
+    });
+}
+
+function animateRing(score) {
+    const ring = document.getElementById('scoreRing');
+    const circumference = 345;
+    const offset = circumference - (score / 100) * circumference;
+    const color = score >= 70 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
+    ring.style.stroke = color;
+    setTimeout(() => { ring.style.strokeDashoffset = offset; }, 60);
+    let cur = 0;
+    const el = document.getElementById('scoreNum');
+    const iv = setInterval(() => { el.textContent = `${Math.min(++cur, score)}%`; if (cur >= score) clearInterval(iv); }, 20);
+}
+
+function getFeedback(score) {
+    if (score >= 85) return ['🎉 Excellent Match!', 'Your profile is a strong fit. You are well-positioned to apply for this role.'];
+    if (score >= 70) return ['✅ Good Match', 'A few additions to your profile will make your application stand out.'];
+    if (score >= 50) return ['⚠️ Moderate Match', 'Work on the highlighted gap skills to significantly improve your chances.'];
+    return ['❌ Low Match', 'Focus on learning the missing skills before applying. Check the recommended courses.'];
+}
+
+// ── Main Analyze ─────────────────────────────────────────────────────────────
+function runAnalysis() {
+    const resumeTxt = resumeTextarea.value.trim();
+    const jdTxt     = jdTextarea.value.trim();
+
+    if (!resumeTxt) {
+        alert('Please upload your resume or drag and drop a file first.');
+        return;
+    }
+
+    document.getElementById('loadingCard').style.display = 'block';
+    document.getElementById('resultsCard').style.display = 'none';
+
+    setTimeout(() => {
+        const resumeSkills = extractSkills(resumeTxt);
+        const jdSkills     = jdTxt ? extractSkills(jdTxt) : [];
+        const matched      = jdSkills.filter(sk => resumeSkills.includes(sk));
+        const missing      = jdSkills.filter(sk => !resumeSkills.includes(sk));
+        const bonus        = resumeSkills.filter(sk => !jdSkills.includes(sk));
+
+        let score;
+        if (!jdTxt) {
+            // No JD: score based on resume richness
+            score = Math.min(50 + resumeSkills.length * 3, 85);
+        } else {
+            score = jdSkills.length === 0 ? 50 : Math.min(Math.round((matched.length / jdSkills.length) * 100) + Math.min(bonus.length * 2, 10), 100);
+        }
+
+        document.getElementById('loadingCard').style.display = 'none';
+        document.getElementById('resultsCard').style.display = 'block';
+
+        animateRing(score);
+        const [title, msg] = getFeedback(score);
+        document.getElementById('scoreFeedbackTitle').textContent = title;
+        document.getElementById('scoreFeedbackMsg').textContent = msg;
+
+        renderTags('matchedTags', matched, 'tag-matched');
+        renderTags('missingTags', missing, 'tag-missing');
+        document.getElementById('missingMsg').textContent = missing.length
+            ? `These ${missing.length} skill(s) appear in the job description but were not found in your resume.`
+            : '';
+
+        if (bonus.length) {
+            document.getElementById('bonusSection').style.display = 'block';
+            renderTags('bonusTags', bonus, 'tag-bonus');
+        } else {
+            document.getElementById('bonusSection').style.display = 'none';
+        }
+
+        // Save report data for other pages (Career, Courses, Dashboard)
+        const reportData = {
+            score: score,
+            matched: matched,
+            missing: missing,
+            bonus: bonus,
+            resumeText: resumeTxt,
+            role: jdTxt ? getRoleMatch(matched.concat(bonus)) : 'General Scan',
+            timestamp: new Date().toISOString()
+        };
+        
+        // Save current report
+        localStorage.setItem('careerReport', JSON.stringify(reportData));
+        localStorage.setItem('missingSkills', JSON.stringify(missing));
+        
+        // Save to history (dashboard)
+        const history = JSON.parse(localStorage.getItem('careerScans') || '[]');
+        history.push({ 
+            score, 
+            matched: matched.length, 
+            missing: missing.length, 
+            role: reportData.role,
+            date: reportData.timestamp
+        });
+        localStorage.setItem('careerScans', JSON.stringify(history));
+
+    }, 900);
+}
+
+// Simple role inference based on skills
+function getRoleMatch(skills) {
+    if (skills.some(s => ['react','angular','vue','next.js'].includes(s))) return 'Frontend Developer';
+    if (skills.some(s => ['node.js','express','django','flask'].includes(s))) return 'Backend Developer';
+    if (skills.some(s => ['machine learning','tensorflow','pytorch','pandas'].includes(s))) return 'Data Scientist';
+    if (skills.some(s => ['aws','docker','kubernetes','terraform'].includes(s))) return 'DevOps Engineer';
+    return 'Full Stack Engineer';
+}
+
+function resetAll() {
+    clearResume();
+    clearJD();
+    document.getElementById('resultsCard').style.display = 'none';
+    document.getElementById('loadingCard').style.display = 'none';
+}
+</script>
+</body>
+</html>

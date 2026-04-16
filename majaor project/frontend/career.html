@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Career Analyzer - Career Intelligence Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{--bg:#080c14;--card:#111827;--card2:#161f30;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#f1f5f9;--muted:#94a3b8;--primary:#6c63ff;--primary2:#8b5cf6;--accent:#3b82f6;--success:#10b981;--warning:#f59e0b;--danger:#ef4444}
+        body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+        body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 60% 40% at 15% 25%,rgba(108,99,255,0.10) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 85% 75%,rgba(59,130,246,0.07) 0%,transparent 60%);pointer-events:none}
+
+        /* NAV */
+        nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 3rem;height:64px;background:rgba(8,12,20,0.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+        .nav-logo{display:flex;align-items:center;gap:0.5rem;font-size:1.2rem;font-weight:700;text-decoration:none;color:var(--text)}
+        .nav-logo .bolt{color:#f97316;font-size:1.3rem}
+        .nav-logo .ai-txt{color:var(--accent)}
+        .nav-links{display:flex;align-items:center;gap:0.2rem;list-style:none}
+        .nav-links a{padding:0.45rem 1rem;border-radius:0.5rem;color:var(--muted);text-decoration:none;font-size:0.9rem;font-weight:500;transition:color 0.2s}
+        .nav-links a.active{color:var(--text);background:rgba(255,255,255,0.06);font-weight:600}
+        .nav-links a:hover{color:var(--text)}
+        .btn-nav{background:linear-gradient(135deg,var(--primary),var(--primary2));color:white;border:none;padding:0.55rem 1.3rem;border-radius:0.5rem;font-weight:600;font-size:0.9rem;cursor:pointer;text-decoration:none}
+
+        /* PAGE */
+        .page{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:2.5rem 1.5rem 5rem}
+
+        /* REPORT HEADER */
+        .report-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.8rem;flex-wrap:wrap;gap:1rem}
+        .report-header h1{font-size:1.7rem;font-weight:900;margin-bottom:0.3rem}
+        .report-header p{color:var(--muted);font-size:0.88rem}
+        .btn-scan{display:inline-flex;align-items:center;gap:0.4rem;background:linear-gradient(135deg,var(--primary),var(--primary2));color:white;border:none;padding:0.6rem 1.2rem;border-radius:0.6rem;font-weight:700;font-size:0.88rem;cursor:pointer;text-decoration:none;box-shadow:0 4px 16px rgba(108,99,255,0.3);transition:transform 0.2s}
+        .btn-scan:hover{transform:translateY(-2px)}
+
+        /* ATS SCORE BOX */
+        .score-box{background:var(--card);border:1px solid var(--border2);border-radius:1.1rem;padding:1.8rem;display:flex;align-items:center;gap:2rem;margin-bottom:1.2rem;flex-wrap:wrap}
+        .ring-wrap{position:relative;width:110px;height:110px;flex-shrink:0}
+        .ring-svg{transform:rotate(-90deg)}
+        .ring-bg{fill:none;stroke:rgba(255,255,255,0.07);stroke-width:11}
+        .ring-fg{fill:none;stroke-width:11;stroke-linecap:round;stroke-dasharray:283;stroke-dashoffset:283;transition:stroke-dashoffset 1.6s ease,stroke 0.4s}
+        .ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+        .ring-center .rnum{font-size:1.4rem;font-weight:800}
+        .ring-center .rsub{font-size:0.58rem;color:var(--muted);font-weight:600;letter-spacing:0.06em;text-transform:uppercase}
+        .score-detail{flex:1;min-width:200px}
+        .match-label{font-size:1.2rem;font-weight:800;margin-bottom:0.4rem;display:flex;align-items:center;gap:0.5rem}
+        .match-label.low{color:var(--danger)}
+        .match-label.mid{color:var(--warning)}
+        .match-label.good{color:var(--success)}
+        .score-detail p{color:var(--muted);font-size:0.87rem;margin-bottom:1rem;line-height:1.6}
+        .score-tags{display:flex;flex-wrap:wrap;gap:0.5rem}
+        .score-tag{padding:0.28rem 0.8rem;border-radius:2rem;font-size:0.78rem;font-weight:600;border:1px solid}
+        .tag-danger{color:var(--danger);border-color:rgba(239,68,68,0.35);background:rgba(239,68,68,0.08)}
+        .tag-warn{color:var(--warning);border-color:rgba(245,158,11,0.35);background:rgba(245,158,11,0.08)}
+        .tag-success{color:var(--success);border-color:rgba(16,185,129,0.35);background:rgba(16,185,129,0.08)}
+
+        /* STATS ROW */
+        .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:1.8rem}
+        .stat-box{background:var(--card);border:1px solid var(--border2);border-radius:0.9rem;padding:1.2rem}
+        .stat-box .sv{font-size:1.8rem;font-weight:800;margin-bottom:0.2rem}
+        .stat-box .sl{font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+        .sv.blue{color:var(--accent)} .sv.red{color:var(--danger)} .sv.green{color:var(--success)} .sv.purple{color:#a78bfa}
+
+        /* TABS */
+        .tabs-wrap{background:var(--card);border:1px solid var(--border2);border-radius:1.1rem;overflow:hidden}
+        .tabs-nav{display:flex;border-bottom:1px solid var(--border);overflow-x:auto}
+        .tab-btn{display:flex;align-items:center;gap:0.4rem;padding:0.9rem 1.2rem;font-size:0.85rem;font-weight:600;color:var(--muted);background:none;border:none;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;flex-shrink:0}
+        .tab-btn:hover{color:var(--text)}
+        .tab-btn.active{color:var(--text);border-bottom-color:var(--primary);background:rgba(108,99,255,0.06)}
+        .tab-panel{display:none;padding:1.8rem}
+        .tab-panel.active{display:block}
+
+        /* Skill tags in tabs */
+        .skill-tags{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.8rem}
+        .sk{padding:0.35rem 0.85rem;border-radius:2rem;font-size:0.8rem;font-weight:600}
+        .sk-green{background:rgba(16,185,129,0.12);color:var(--success);border:1px solid rgba(16,185,129,0.3)}
+        .sk-blue{background:rgba(59,130,246,0.1);color:#60a5fa;border:1px solid rgba(59,130,246,0.3)}
+        .sk-gray{background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border2)}
+        .sk-red{background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.3)}
+
+        /* Feedback items */
+        .feedback-item{border-left:3px solid;padding:0.9rem 1rem;border-radius:0 0.5rem 0.5rem 0;margin-bottom:0.9rem;font-size:0.88rem;line-height:1.6}
+        .fb-warn{border-color:var(--warning);background:rgba(245,158,11,0.06)}
+        .fb-success{border-color:var(--success);background:rgba(16,185,129,0.06)}
+        .fb-info{border-color:var(--accent);background:rgba(59,130,246,0.06)}
+
+        /* Gap course mini cards */
+        .mini-courses{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0.85rem;margin-top:1rem}
+        .mini-card{background:var(--card2);border:1px solid var(--border2);border-radius:0.75rem;padding:1rem;display:flex;flex-direction:column;gap:0.5rem}
+        .mini-card .mc-badge{font-size:0.68rem;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;display:inline-block;padding:0.18rem 0.55rem;border-radius:0.3rem}
+        .mc-udemy{background:rgba(234,160,0,0.15);color:#f59e0b;border:1px solid rgba(234,160,0,0.3)}
+        .mc-youtube{background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.3)}
+        .mc-coursera{background:rgba(59,130,246,0.12);color:#60a5fa;border:1px solid rgba(59,130,246,0.3)}
+        .mc-default{background:rgba(255,255,255,0.06);color:var(--muted);border:1px solid var(--border2)}
+        .mini-card h4{font-size:0.88rem;font-weight:700;line-height:1.4}
+        .mini-card a{color:var(--primary);font-size:0.8rem;font-weight:600;text-decoration:none}
+        .mini-card a:hover{color:#a78bfa}
+
+        /* Projects */
+        .project-card{background:var(--card2);border:1px solid var(--border2);border-radius:0.75rem;padding:1.1rem;margin-bottom:0.85rem}
+        .project-card h4{font-size:0.9rem;font-weight:700;margin-bottom:0.35rem;display:flex;align-items:center;gap:0.4rem}
+        .project-card p{color:var(--muted);font-size:0.83rem;line-height:1.6}
+
+        /* Roadmap timeline */
+        .timeline{position:relative;padding-left:2rem;margin-top:1rem}
+        .timeline::before{content:'';position:absolute;left:0.55rem;top:0;bottom:0;width:2px;background:var(--border2)}
+        .tl-item{position:relative;margin-bottom:1.2rem}
+        .tl-dot{position:absolute;left:-1.9rem;top:0.35rem;width:14px;height:14px;border-radius:50%;background:var(--primary);border:2px solid var(--bg)}
+        .tl-dot.done{background:var(--success)}
+        .tl-dot.pending{background:var(--card2);border-color:var(--border2)}
+        .tl-item h4{font-size:0.9rem;font-weight:700;margin-bottom:0.2rem}
+        .tl-item p{color:var(--muted);font-size:0.82rem}
+        .tl-badge{display:inline-block;padding:0.15rem 0.55rem;border-radius:0.3rem;font-size:0.7rem;font-weight:700;margin-left:0.5rem}
+        .done-badge{background:rgba(16,185,129,0.12);color:var(--success)}
+        .pending-badge{background:rgba(245,158,11,0.1);color:var(--warning)}
+
+        .lbl{font-size:0.78rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;margin-top:1.2rem;display:block}
+        .empty-msg{color:var(--muted);font-size:0.85rem}
+
+        @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        .animate{animation:fadeUp 0.5s ease both}
+    </style>
+</head>
+<body>
+<nav>
+    <a href="index.html" class="nav-logo"><span class="bolt"><i class="fa-solid fa-bolt"></i></span><span class="ai-txt">AI</span>Career</a>
+    <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="resume.html">Analyze</a></li>
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="career.html" class="active">Career Path</a></li>
+        <li><a href="courses.html">Courses</a></li>
+    </ul>
+    <a href="resume.html" class="btn-nav">Get Started</a>
+</nav>
+
+<div class="page animate">
+    <!-- Report Header -->
+    <div class="report-header">
+        <div>
+            <h1>Intelligence Report</h1>
+            <p>AI-generated resume benchmarking and improvement roadmap.</p>
+        </div>
+        <a href="resume.html" class="btn-scan">New Scan</a>
+    </div>
+
+    <!-- ATS Score Box -->
+    <div class="score-box">
+        <div class="ring-wrap">
+            <svg class="ring-svg" viewBox="0 0 110 110" width="110" height="110">
+                <circle class="ring-bg" cx="55" cy="55" r="45"/>
+                <circle class="ring-fg" id="atsRing" cx="55" cy="55" r="45"/>
+            </svg>
+            <div class="ring-center">
+                <div class="rnum" id="atsNum">—</div>
+                <div class="rsub">ATS Match</div>
+            </div>
+        </div>
+        <div class="score-detail">
+            <div class="match-label" id="matchLabel">No Scan Yet</div>
+            <p id="matchDesc">Run a resume analysis to see your detailed intelligence report here.</p>
+            <div class="score-tags" id="scoreTags"></div>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-box"><div class="sv blue" id="statDetected">—</div><div class="sl">Skills Detected</div></div>
+        <div class="stat-box"><div class="sv red"  id="statGaps">—</div><div class="sl">Skill Gaps</div></div>
+        <div class="stat-box"><div class="sv purple" id="statWords">—</div><div class="sl">Word Count</div></div>
+        <div class="stat-box"><div class="sv green" id="statRole">—</div><div class="sl">Top Role Match</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-wrap">
+        <div class="tabs-nav">
+            <button class="tab-btn active" onclick="switchTab('skills',this)">🔧 Detected Skills</button>
+            <button class="tab-btn" onclick="switchTab('feedback',this)">🤖 AI Feedback</button>
+            <button class="tab-btn" onclick="switchTab('courses',this)">🎓 Recommended Courses</button>
+            <button class="tab-btn" onclick="switchTab('projects',this)">💡 Projects &amp; Tips</button>
+            <button class="tab-btn" onclick="switchTab('roadmap',this)">🗺️ Roadmap</button>
+        </div>
+
+        <!-- Tab: Detected Skills -->
+        <div id="tab-skills" class="tab-panel active">
+            <h3 style="font-size:0.97rem;font-weight:700;margin-bottom:0.3rem">Extracted Technical Competencies</h3>
+            <div class="skill-tags" id="detectedSkillTags"><span class="empty-msg">Run a scan to see detected skills.</span></div>
+            <hr style="border:none;border-top:1px solid var(--border);margin:1.2rem 0">
+            <p style="font-size:0.83rem;color:var(--muted)">
+                <span style="color:var(--success);font-weight:600">Green</span> = matched with JD. &nbsp;
+                <span style="color:#60a5fa;font-weight:600">Blue</span> = bonus skill (not in JD). &nbsp;
+                <span style="color:var(--danger);font-weight:600">Red</span> = gap (in JD, missing from resume).
+            </p>
+            <span class="lbl">Missing Skills</span>
+            <div class="skill-tags" id="missingSkillTags"><span class="empty-msg">—</span></div>
+        </div>
+
+        <!-- Tab: AI Feedback -->
+        <div id="tab-feedback" class="tab-panel">
+            <h3 style="font-size:0.97rem;font-weight:700;margin-bottom:1.2rem">Improvement Suggestions</h3>
+            <div id="feedbackItems"><span class="empty-msg">Run a scan to generate feedback.</span></div>
+        </div>
+
+        <!-- Tab: Recommended Courses -->
+        <div id="tab-courses" class="tab-panel">
+            <h3 style="font-size:0.97rem;font-weight:700;margin-bottom:0.4rem">Courses for Your Skill Gaps</h3>
+            <p style="color:var(--muted);font-size:0.83rem;margin-bottom:0.6rem">Based on your identified gaps.</p>
+            <div class="mini-courses" id="miniCourses"><span class="empty-msg">Run a scan to get course recommendations.</span></div>
+            <div style="margin-top:1.2rem"><a href="courses.html" style="color:var(--primary);font-size:0.85rem;font-weight:600;text-decoration:none">View all courses <i class="fa-solid fa-arrow-right" style="font-size:0.75rem"></i></a></div>
+        </div>
+
+        <!-- Tab: Projects & Tips -->
+        <div id="tab-projects" class="tab-panel">
+            <h3 style="font-size:0.97rem;font-weight:700;margin-bottom:1.2rem">Portfolio Projects &amp; Career Tips</h3>
+            <div class="project-card">
+                <h4>🧩 Build a Full-Stack Project</h4>
+                <p>Create a complete CRUD application using your strongest stack. Host it on Vercel or Netlify to show employers real-world deployment skills.</p>
+            </div>
+            <div class="project-card">
+                <h4>📊 Data Dashboard App</h4>
+                <p>Build a dashboard that fetches live data from a public API (e.g., weather, stocks). Demonstrates charting, data handling, and API integration.</p>
+            </div>
+            <div class="project-card">
+                <h4>🔐 Auth & Role-Based System</h4>
+                <p>Implement authentication with JWT or OAuth. Role-based access control (Admin / User) is a common enterprise requirement recruiters value.</p>
+            </div>
+            <div class="project-card">
+                <h4>💡 Tip: Quantify Your Experience</h4>
+                <p>Add metrics to your resume points — "Reduced load time by 40%", "Managed database with 1M+ records". Numbers catch recruiter attention fast.</p>
+            </div>
+        </div>
+
+        <!-- Tab: Roadmap -->
+        <div id="tab-roadmap" class="tab-panel">
+            <h3 style="font-size:0.97rem;font-weight:700;margin-bottom:0.3rem">Your Career Roadmap</h3>
+            <p style="color:var(--muted);font-size:0.83rem;margin-bottom:1.2rem">Personalized path from <strong id="currLevelTxt">Junior Developer</strong> → <strong id="targetRoleTxt" style="color:var(--success)">Full Stack Engineer</strong></p>
+            <div class="timeline" id="roadmapTimeline"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Tab switching
+function switchTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-'+id).classList.add('active');
+    btn.classList.add('active');
+}
+
+// Load from localStorage (set by resume.html analysis)
+const report = JSON.parse(localStorage.getItem('careerReport') || 'null');
+
+// Course mini DB
+const MINI_COURSES = {
+    'javascript':[{title:'Complete JavaScript 2024',provider:'Udemy',link:'https://www.udemy.com/course/the-complete-javascript-course/',pc:'mc-udemy'},{title:'JS Algorithms',provider:'Coursera',link:'https://www.coursera.org/specializations/data-structures-algorithms',pc:'mc-coursera'}],
+    'typescript':[{title:'TypeScript Complete Guide',provider:'Udemy',link:'https://www.udemy.com/course/typescript-the-complete-developers-guide/',pc:'mc-udemy'},{title:'TypeScript Crash Course',provider:'YouTube',link:'https://www.youtube.com/watch?v=BwuLxPH8IDs',pc:'mc-youtube'}],
+    'react':[{title:'React Complete Guide',provider:'Udemy',link:'https://www.udemy.com/course/react-the-complete-guide-incl-redux/',pc:'mc-udemy'},{title:'React Course',provider:'YouTube',link:'https://www.youtube.com/watch?v=b9eMGE7QtTk',pc:'mc-youtube'}],
+    'aws':[{title:'AWS Cloud Practitioner',provider:'Coursera',link:'https://www.coursera.org/learn/aws-cloud-practitioner-essentials',pc:'mc-coursera'}],
+    'docker':[{title:'Docker for Beginners',provider:'Udemy',link:'https://www.udemy.com/course/docker-tutorial-for-devops-run-docker-containers/',pc:'mc-udemy'}],
+    'machine learning':[{title:'ML Specialization',provider:'Coursera',link:'https://www.coursera.org/specializations/machine-learning-introduction',pc:'mc-coursera'}],
+};
+
+function pClass(p){const l=p.toLowerCase();if(l.includes('udemy'))return 'mc-udemy';if(l.includes('youtube'))return 'mc-youtube';if(l.includes('coursera'))return 'mc-coursera';return 'mc-default';}
+
+function animateRing(score, color) {
+    const ring = document.getElementById('atsRing');
+    const circumference = 283;
+    ring.style.stroke = color;
+    setTimeout(() => { ring.style.strokeDashoffset = circumference - (score/100)*circumference; }, 60);
+    let cur = 0;
+    const el = document.getElementById('atsNum');
+    const iv = setInterval(() => { el.textContent = Math.min(++cur, score) + '%'; if(cur>=score) clearInterval(iv); }, 22);
+}
+
+function getRoleMatch(matched) {
+    if (matched.some(s => ['react','angular','vue','next.js'].includes(s))) return 'Frontend Developer';
+    if (matched.some(s => ['node.js','express','django','flask'].includes(s))) return 'Backend Developer';
+    if (matched.some(s => ['machine learning','tensorflow','pytorch','pandas'].includes(s))) return 'Data Scientist';
+    if (matched.some(s => ['aws','docker','kubernetes','terraform'].includes(s))) return 'DevOps Engineer';
+    return 'Full Stack Developer';
+}
+
+// Roadmap default data
+const ROADMAP = [
+    {title:'Master HTML, CSS & JavaScript', done:true},
+    {title:'Learn a Frontend Framework (React / Vue)', done:true},
+    {title:'Build REST APIs with Node.js & Express', done:false},
+    {title:'Database Design — SQL & MongoDB', done:false},
+    {title:'Cloud Deployment on AWS / Vercel', done:false},
+    {title:'CI/CD Pipelines & Docker', done:false},
+];
+
+// Build roadmap
+function buildRoadmap() {
+    const tl = document.getElementById('roadmapTimeline');
+    ROADMAP.forEach(step => {
+        const item = document.createElement('div');
+        item.className = 'tl-item';
+        item.innerHTML = `<div class="tl-dot ${step.done?'done':'pending'}"></div>
+            <h4>${step.title} <span class="tl-badge ${step.done?'done-badge':'pending-badge'}">${step.done?'✓ Done':'Pending'}</span></h4>`;
+        tl.appendChild(item);
+    });
+}
+buildRoadmap();
+
+if (report) {
+    const { score, matched, missing, bonus, resumeText } = report;
+    const color = score >= 70 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
+    animateRing(score, color);
+
+    // Match label
+    const label = document.getElementById('matchLabel');
+    const desc  = document.getElementById('matchDesc');
+    if (score >= 70) { label.className='match-label good'; label.innerHTML='Good Match <i class="fa-solid fa-check-circle"></i>'; }
+    else if (score >= 50) { label.className='match-label mid'; label.innerHTML='Moderate Match <i class="fa-solid fa-triangle-exclamation"></i>'; }
+    else { label.className='match-label low'; label.innerHTML='Low Match <i class="fa-solid fa-triangle-exclamation"></i>'; }
+    desc.textContent = 'Your resume match compared against the job description.';
+
+    // Score tags
+    const tagsEl = document.getElementById('scoreTags');
+    if (missing.length) tagsEl.innerHTML += `<span class="score-tag tag-danger">Major Gaps</span>`;
+    tagsEl.innerHTML += `<span class="score-tag tag-warn">Revise Resume</span>`;
+    if (score>=70) tagsEl.innerHTML += `<span class="score-tag tag-success">Strong Match</span>`;
+
+    // Stats
+    document.getElementById('statDetected').textContent = matched.length + bonus.length;
+    document.getElementById('statGaps').textContent = missing.length;
+    document.getElementById('statWords').textContent = resumeText ? resumeText.trim().split(/\s+/).length : '—';
+    document.getElementById('statRole').textContent = getRoleMatch(matched.concat(bonus));
+    document.getElementById('statRole').style.fontSize = '1rem';
+
+    // Detected skills tab
+    const allDetected = document.getElementById('detectedSkillTags');
+    allDetected.innerHTML = '';
+    matched.forEach(sk => { const s=document.createElement('span'); s.className='sk sk-green'; s.textContent=sk; allDetected.appendChild(s); });
+    bonus.forEach(sk  => { const s=document.createElement('span'); s.className='sk sk-blue';  s.textContent=sk; allDetected.appendChild(s); });
+    if (!matched.length && !bonus.length) allDetected.innerHTML='<span class="empty-msg">No skills detected from resume text.</span>';
+
+    const missingEl = document.getElementById('missingSkillTags');
+    missingEl.innerHTML = '';
+    missing.forEach(sk => { const s=document.createElement('span'); s.className='sk sk-red'; s.textContent=sk; missingEl.appendChild(s); });
+    if (!missing.length) missingEl.innerHTML='<span class="empty-msg" style="color:var(--success)">✓ No gaps detected!</span>';
+
+    // AI Feedback
+    const fbEl = document.getElementById('feedbackItems'); fbEl.innerHTML='';
+    if (missing.length) {
+        fbEl.innerHTML+=`<div class="feedback-item fb-warn">⚠️ <strong>Skill Gap:</strong> You are missing <strong>${missing.length}</strong> skill(s) that appear in the job description: ${missing.slice(0,5).join(', ')}${missing.length>5?'…':''}. Consider enrolling in targeted courses.</div>`;
+    }
+    if (score >= 70) {
+        fbEl.innerHTML+=`<div class="feedback-item fb-success">✅ <strong>Strong ATS Match:</strong> Your resume aligns well with the job requirements. Focus on showcasing quantified achievements.</div>`;
+    } else {
+        fbEl.innerHTML+=`<div class="feedback-item fb-info">💡 <strong>Tip:</strong> Add more relevant keywords from the job description naturally to your resume bullet points to improve ATS parsing.</div>`;
+    }
+    fbEl.innerHTML+=`<div class="feedback-item fb-info">📝 <strong>Format:</strong> Keep your resume to 1-2 pages. Use action verbs (Built, Led, Reduced, Increased) to strengthen impact.</div>`;
+    fbEl.innerHTML+=`<div class="feedback-item fb-success">🎯 <strong>Bonus Skills:</strong> You have ${bonus.length} additional skill(s) not mentioned in the JD. Highlight these as differentiators in your cover letter.</div>`;
+
+    // Mini Courses
+    const mc = document.getElementById('miniCourses'); mc.innerHTML='';
+    const topGaps = missing.slice(0,4);
+    if (topGaps.length) {
+        topGaps.forEach(sk => {
+            const courses = MINI_COURSES[sk] || [{title:`Learn ${sk}`,provider:'Udemy',link:`https://www.udemy.com/courses/search/?q=${encodeURIComponent(sk)}`,pc:'mc-udemy'}];
+            courses.slice(0,1).forEach(co => {
+                mc.innerHTML+=`<div class="mini-card"><span class="mc-badge ${co.pc||pClass(co.provider)}">${co.provider}</span><h4>${co.title}</h4><a href="${co.link}" target="_blank">View Course ↗</a></div>`;
+            });
+        });
+    } else {
+        mc.innerHTML='<span class="empty-msg" style="color:var(--success)">✓ No gap courses needed!</span>';
+    }
+} else {
+    // No report — show empty state with CTA
+    document.getElementById('matchLabel').innerHTML = 'No Scan Yet';
+    document.getElementById('matchDesc').textContent = 'Run a resume analysis to populate this intelligence report.';
+    document.getElementById('scoreTags').innerHTML = `<a href="resume.html" style="display:inline-flex;align-items:center;gap:0.4rem;background:linear-gradient(135deg,var(--primary),var(--primary2));color:white;padding:0.5rem 1rem;border-radius:0.5rem;font-weight:700;font-size:0.82rem;text-decoration:none"><i class="fa-solid fa-magnifying-glass"></i> Start Analysis</a>`;
+    ['statDetected','statGaps','statWords'].forEach(id => document.getElementById(id).textContent = '—');
+    document.getElementById('statRole').textContent = '—';
+}
+</script>
+</body>
+</html>

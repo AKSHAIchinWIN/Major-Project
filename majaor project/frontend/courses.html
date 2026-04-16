@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Career Analyzer - Courses</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{--bg:#080c14;--card:#111827;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#f1f5f9;--muted:#94a3b8;--primary:#6c63ff;--primary2:#8b5cf6;--accent:#3b82f6;--success:#10b981;--warning:#f59e0b;--danger:#ef4444}
+        body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+        body::before{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 60% 40% at 15% 25%,rgba(108,99,255,0.10) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 85% 75%,rgba(59,130,246,0.07) 0%,transparent 60%);pointer-events:none}
+        nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 3rem;height:64px;background:rgba(8,12,20,0.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+        .nav-logo{display:flex;align-items:center;gap:0.5rem;font-size:1.2rem;font-weight:700;text-decoration:none;color:var(--text)}
+        .nav-logo .bolt{color:#f97316;font-size:1.3rem}
+        .nav-logo .ai-txt{color:var(--accent)}
+        .nav-links{display:flex;align-items:center;gap:0.2rem;list-style:none}
+        .nav-links a{padding:0.45rem 1rem;border-radius:0.5rem;color:var(--muted);text-decoration:none;font-size:0.9rem;font-weight:500;transition:color 0.2s}
+        .nav-links a.active{color:var(--text);background:rgba(255,255,255,0.06);font-weight:600}
+        .nav-links a:hover{color:var(--text)}
+        .btn-nav{background:linear-gradient(135deg,var(--primary),var(--primary2));color:white;border:none;padding:0.55rem 1.3rem;border-radius:0.5rem;font-weight:600;font-size:0.9rem;cursor:pointer;text-decoration:none}
+        .page{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:3rem 1.5rem 5rem}
+        .page-badge{display:inline-flex;align-items:center;gap:0.4rem;background:rgba(108,99,255,0.15);border:1px solid rgba(108,99,255,0.3);color:#a78bfa;padding:0.35rem 1rem;border-radius:2rem;font-size:0.75rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:1.2rem}
+        h1.page-title{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:900;margin-bottom:0.6rem}
+        .page-sub{color:var(--muted);font-size:0.97rem;line-height:1.7;margin-bottom:2.5rem}
+        .gap-section{margin-bottom:2.5rem}
+        .gap-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.2rem}
+        .gap-header span{font-size:1.05rem;font-weight:800}
+        .gap-pill{padding:0.28rem 0.75rem;border-radius:0.4rem;font-size:0.78rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:rgba(108,99,255,0.15);color:#a78bfa;border:1px solid rgba(108,99,255,0.25)}
+        .courses-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1rem}
+        .course-card{background:var(--card);border:1px solid var(--border2);border-radius:1rem;padding:1.4rem;display:flex;flex-direction:column;gap:0.7rem;transition:transform 0.22s,border-color 0.22s}
+        .course-card:hover{transform:translateY(-4px);border-color:rgba(108,99,255,0.3)}
+        .provider-badge{display:inline-block;padding:0.2rem 0.6rem;border-radius:0.3rem;font-size:0.7rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;width:fit-content}
+        .p-udemy{background:rgba(234,160,0,0.15);color:#f59e0b;border:1px solid rgba(234,160,0,0.3)}
+        .p-youtube{background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.3)}
+        .p-coursera{background:rgba(59,130,246,0.12);color:#60a5fa;border:1px solid rgba(59,130,246,0.3)}
+        .p-pluralsight{background:rgba(16,185,129,0.12);color:var(--success);border:1px solid rgba(16,185,129,0.3)}
+        .p-freecodecamp{background:rgba(108,99,255,0.12);color:#a78bfa;border:1px solid rgba(108,99,255,0.3)}
+        .p-default{background:rgba(255,255,255,0.06);color:var(--muted);border:1px solid var(--border2)}
+        .course-title{font-size:0.95rem;font-weight:700;line-height:1.4}
+        .course-level{font-size:0.82rem;color:var(--muted)}
+        .course-link{display:inline-flex;align-items:center;gap:0.35rem;color:var(--primary);font-size:0.85rem;font-weight:600;text-decoration:none;margin-top:auto;transition:color 0.2s}
+        .course-link:hover{color:#a78bfa}
+        .gap-divider{border:none;border-top:1px solid var(--border);margin:0 0 2.5rem}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        .animate{animation:fadeUp 0.5s ease both}
+    </style>
+</head>
+<body>
+<nav>
+    <a href="index.html" class="nav-logo"><span class="bolt"><i class="fa-solid fa-bolt"></i></span><span class="ai-txt">AI</span>Career</a>
+    <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="resume.html">Analyze</a></li>
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="career.html">Career Path</a></li>
+        <li><a href="courses.html" class="active">Courses</a></li>
+    </ul>
+    <a href="resume.html" class="btn-nav">Get Started</a>
+</nav>
+
+<div class="page animate">
+    <div style="text-align:center;margin-bottom:3rem">
+        <div class="page-badge"><i class="fa-solid fa-graduation-cap"></i> Learning Paths</div>
+        <h1 class="page-title">Recommended Courses</h1>
+        <p class="page-sub">Courses grouped by your skill gaps — start with what matters most.</p>
+    </div>
+    <div id="coursesContainer"></div>
+</div>
+
+<script>
+const COURSE_DB={
+    'javascript':[{title:'The Complete JavaScript Course 2024',provider:'Udemy',level:'Beginner',link:'https://www.udemy.com/course/the-complete-javascript-course/'},{title:'JavaScript Algorithms and Data Structures',provider:'Coursera',level:'Intermediate',link:'https://www.coursera.org/specializations/data-structures-algorithms'}],
+    'typescript':[{title:'TypeScript — The Complete Developer\'s Guide',provider:'Udemy',level:'Intermediate',link:'https://www.udemy.com/course/typescript-the-complete-developers-guide/'},{title:'TypeScript Full Course for Beginners',provider:'YouTube',level:'Beginner',link:'https://www.youtube.com/watch?v=BwuLxPH8IDs'}],
+    'python':[{title:'Python for Everybody Specialization',provider:'Coursera',level:'Beginner',link:'https://www.coursera.org/specializations/python'},{title:'Python Full Course',provider:'YouTube',level:'Beginner',link:'https://www.youtube.com/watch?v=rfscVS0vtbw'}],
+    'react':[{title:'React — The Complete Guide 2024',provider:'Udemy',level:'Intermediate',link:'https://www.udemy.com/course/react-the-complete-guide-incl-redux/'},{title:'Full Stack React Course',provider:'YouTube',level:'Beginner',link:'https://www.youtube.com/watch?v=b9eMGE7QtTk'}],
+    'angular':[{title:'Angular — The Complete Guide 2024',provider:'Udemy',level:'Intermediate',link:'https://www.udemy.com/course/the-complete-guide-to-angular-2/'},{title:'Angular Full Course 2024',provider:'YouTube',level:'Beginner',link:'https://www.youtube.com/watch?v=3dHNOWTI7H8'}],
+    'node.js':[{title:'Node.js — The Complete Bootcamp',provider:'Udemy',level:'Intermediate',link:'https://www.udemy.com/course/nodejs-express-mongodb-bootcamp/'},{title:'Node.js Crash Course',provider:'YouTube',level:'Beginner',link:'https://www.youtube.com/watch?v=fBNz5xF-Kx4'}],
+    'aws':[{title:'AWS Cloud Practitioner Essentials',provider:'Coursera',level:'Beginner',link:'https://www.coursera.org/learn/aws-cloud-practitioner-essentials'},{title:'AWS Certified Solutions Architect',provider:'Udemy',level:'Intermediate',link:'https://www.udemy.com/course/aws-certified-solutions-architect-associate-saa-c03/'}],
+    'docker':[{title:'Docker for Absolute Beginners',provider:'Udemy',level:'Beginner',link:'https://www.udemy.com/course/docker-tutorial-for-devops-run-docker-containers/'},{title:'Docker Full Course',provider:'YouTube',level:'Beginner',link:'https://www.youtube.com/watch?v=fqMOX6JJhGo'}],
+    'machine learning':[{title:'Machine Learning Specialization',provider:'Coursera',level:'Intermediate',link:'https://www.coursera.org/specializations/machine-learning-introduction'},{title:'ML Full Course',provider:'YouTube',level:'Beginner',link:'https://www.youtube.com/watch?v=NWONeJKn6kc'}],
+    'sql':[{title:'SQL for Data Science',provider:'Coursera',level:'Beginner',link:'https://www.coursera.org/learn/sql-for-data-science'},{title:'SQL Full Course',provider:'YouTube',level:'Beginner',link:'https://www.youtube.com/watch?v=HXV3zeQKqGY'}],
+    'graphql':[{title:'GraphQL with Apollo Server',provider:'Pluralsight',level:'Advanced',link:'https://www.pluralsight.com/courses/apollo-graphql-server'},{title:'GraphQL Full Course',provider:'YouTube',level:'Intermediate',link:'https://www.youtube.com/watch?v=ed8SzALpx1Q'}],
+    'kubernetes':[{title:'Kubernetes for Beginners',provider:'Udemy',level:'Intermediate',link:'https://www.udemy.com/course/learn-kubernetes/'},{title:'Kubernetes Tutorial',provider:'YouTube',level:'Beginner',link:'https://www.youtube.com/watch?v=X48VuDVv0do'}],
+};
+function getFallback(sk){return[{title:`${sk.charAt(0).toUpperCase()+sk.slice(1)} Complete Course 2024`,provider:'Udemy',level:'Beginner',link:`https://www.udemy.com/courses/search/?q=${encodeURIComponent(sk)}`},{title:`Learn ${sk.charAt(0).toUpperCase()+sk.slice(1)} — Tutorial`,provider:'YouTube',level:'Beginner',link:`https://www.youtube.com/results?search_query=${encodeURIComponent(sk+' tutorial')}`}]}
+function pClass(p){const l=p.toLowerCase();if(l.includes('udemy'))return 'p-udemy';if(l.includes('youtube'))return 'p-youtube';if(l.includes('coursera'))return 'p-coursera';if(l.includes('pluralsight'))return 'p-pluralsight';if(l.includes('freecodecamp'))return 'p-freecodecamp';return 'p-default';}
+function render(skills){
+    const c=document.getElementById('coursesContainer');c.innerHTML='';
+    if(!skills.length){c.innerHTML=`<div style="text-align:center;background:var(--card);border:1px solid var(--border2);border-radius:1rem;padding:3rem"><div style="font-size:3rem;margin-bottom:1rem">🎓</div><h3 style="margin-bottom:0.5rem">No gaps to fill yet</h3><p style="color:var(--muted);margin-bottom:1.5rem">Run a resume analysis first to get personalised recommendations.</p><a href="resume.html" style="display:inline-flex;align-items:center;gap:0.4rem;background:linear-gradient(135deg,var(--primary),var(--primary2));color:white;padding:0.7rem 1.4rem;border-radius:0.6rem;font-weight:700;text-decoration:none"><i class="fa-solid fa-magnifying-glass"></i>&nbsp;Analyze Resume</a></div>`;return;}
+    skills.forEach((sk,i)=>{
+        const courses=COURSE_DB[sk]||getFallback(sk);
+        const sec=document.createElement('div');sec.className='gap-section';
+        sec.innerHTML=`<div class="gap-header"><span>Gap:</span><span class="gap-pill">${sk.toUpperCase()}</span></div><div class="courses-grid">${courses.map(co=>`<div class="course-card"><span class="provider-badge ${pClass(co.provider)}">${co.provider}</span><div class="course-title">${co.title}</div><div class="course-level">Level: ${co.level}</div><a href="${co.link}" target="_blank" rel="noopener" class="course-link">View Course <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.7rem"></i></a></div>`).join('')}</div>`;
+        c.appendChild(sec);
+        if(i<skills.length-1){const hr=document.createElement('hr');hr.className='gap-divider';c.appendChild(hr);}
+    });
+}
+const saved=JSON.parse(localStorage.getItem('missingSkills')||'[]');
+render(saved.length?saved:['javascript','react','aws','docker','machine learning','sql']);
+</script>
+</body>
+</html>

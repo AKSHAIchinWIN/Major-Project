@@ -1,0 +1,23 @@
+# Task Checklist
+
+- [ ] Planning
+  - [x] Create initial task.md
+  - [x] Create implementation_plan.md
+  - [ ] Await user review of the plan
+- [ ] Backend Implementation (Node.js/Express)
+  - [ ] Initialize Node project and install dependencies (express, cors, multer for resume upload)
+  - [ ] Create `server.js` with basic API routes for `/api/resume-analysis`, `/api/career-path`, `/api/courses`
+  - [ ] Implement mock logic for ATS score, missing skills identification, and course recommendations
+- [ ] Frontend Core Setup
+  - [ ] Setup HTML skeleton with sidebar navigation
+  - [ ] Create core CSS for modern aesthetics (vibrant dark mode, glassmorphism, animations)
+  - [ ] Create global JavaScript utility functions (API fetching, DOM updates)
+- [ ] Page Implementations
+  - [ ] Build Dashboard (`index.html`) - Overview and metrics
+  - [ ] Build Resume Analysis Page (`resume.html`) - Upload UI and ATS score display
+  - [ ] Build Career Path Page (`career.html`) - Roadmap and missing skills visualization
+  - [ ] Build Courses Page (`courses.html`) - Recommended courses grid
+- [ ] Final Testing and Polish
+  - [ ] Integrate frontend with backend API
+  - [ ] Test interactions and responsive design
+  - [ ] Create walkthrough.md
