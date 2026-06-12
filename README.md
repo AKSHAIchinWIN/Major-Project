@@ -16,4 +16,4 @@ Python • Streamlit • Scikit-Learn • Gemini AI • PDFPlumber • ReportLab
 
 ### Live Demo
 
-[Paste your Streamlit app link here](https://genai-resume-analyzer-yhzaead2rmkfhcibzntbbv.streamlit.app/)
+[GenAI resume analyzer link](https://genai-resume-analyzer-yhzaead2rmkfhcibzntbbv.streamlit.app/)
