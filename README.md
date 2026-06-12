@@ -1,4 +1,4 @@
-# 📄 GenAI Resume Analyzer
+# 📄 GenAI Resume Analyzer (Using Gemini)
 
 AI-powered resume analyzer that compares resumes with job descriptions using NLP and generates personalized feedback with Gemini AI.
 
