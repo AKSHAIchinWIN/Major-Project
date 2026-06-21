@@ -61,7 +61,7 @@ cd GenAi-Resume-Analyzer
 pip install -r requirements.txt
 streamlit run app.py
 ```
-A Gemini API key is required for the AI feedback step — set it as an environment variable as configured in `utils/gemini_service.py`.
+A Gemini API key is required for the AI feedback step set it as an environment variable as configured in `utils/gemini_service.py`.
 
 ## Design Notes
 
