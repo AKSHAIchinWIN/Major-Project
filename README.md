@@ -1,6 +1,6 @@
 # 📄 GenAI Resume Analyzer
 
-An AI-powered web app that compares a resume against a job description, returns a quantitative match score, and generates qualitative improvement feedback using Google's Gemini AI — packaged as a downloadable PDF report.
+An AI-powered web app that compares a resume against a job description, returns a quantitative match score, and generates qualitative improvement feedback using Google's Gemini AI packaged as a downloadable PDF report.
 
 **Live demo:** https://genai-resume-analyzer-yhzaead2rmkfhcibzntbbv.streamlit.app/
 
